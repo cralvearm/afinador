@@ -235,6 +235,14 @@
       id: 'singularidad-1', nombre: 'singularidad #1', fijo: true,
       cuerdas: [{ hz: 323.31 }, { hz: 242.8 }, { hz: 196 }, { hz: 143.37 }, { hz: 112.09 }, { hz: 82.4 }],
     },
+    {
+      id: 'solo-for-guitar-1', nombre: 'Solo for guitar 1', fijo: true,
+      cuerdas: [{ hz: 326.67 }, { hz: 245.0 }, { hz: 196 }, { hz: 144.22 }, { hz: 112.0 }, { hz: 82.41 }],
+    },
+    {
+      id: 'one-for-one', nombre: 'One for One', fijo: true,
+      cuerdas: [{ hz: 326.98 }, { hz: 246.94 }, { hz: 198.39 }, { hz: 146.83 }, { hz: 111.6 }, { hz: 82.41 }],
+    },
   ];
   const KEY = 'afinador.afinaciones';
   const loadSaved = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } };
