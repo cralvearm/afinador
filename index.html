@@ -76,7 +76,8 @@
   }
   .string .n { font-family: var(--mono); font-size: 18px; }
   .string.active { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
-  .string.playing .n::after { content: " ♪"; color: var(--accent); }
+  .string.locked { background: var(--ink); color: var(--bg); }
+  .string.playing { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
 
   /* Medidor */
   .meter { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 16px 12px; display: grid; gap: 10px; }
@@ -138,7 +139,7 @@
   <section class="meter" id="meter">
     <div class="readout">
       <div class="cents" id="centsOut">—<small>cents</small></div>
-      <div class="freq"><b id="freqOut">—</b> Hz<br>objetivo <span id="targetOut">—</span> Hz</div>
+      <div class="freq"><b id="freqOut">—</b> Hz<br>objetivo: <span id="targetOut">—</span> Hz <span id="targetNote"></span></div>
     </div>
     <svg class="scale" viewBox="0 0 600 84" aria-hidden="true">
       <g id="ticks" stroke="var(--line-strong)" stroke-width="1"></g>
@@ -156,7 +157,6 @@
     <div class="controls">
       <button class="primary" id="micBtn">Micrófono</button>
       <button id="toneBtn">Tono de referencia</button>
-      <label><input type="checkbox" id="autoString" checked> elegir cuerda sola</label>
     </div>
   </section>
 
@@ -322,10 +322,13 @@
     // Se dibujan de la más grave a la más aguda, como en el clavijero.
     current.cuerdas.map((c, i) => [c, i]).reverse().forEach(([c, i]) => {
       const b = document.createElement('div');
-      b.className = 'string' + (i === activeIdx ? ' active' : '');
+      b.className = 'string' + (i === activeIdx ? ' active' : '') + (i === activeIdx && !auto ? ' locked' : '');
       b.dataset.i = i; b.setAttribute('role', 'button'); b.tabIndex = 0;
       b.innerHTML = `<span class="n">${i + 1}</span>`;
-      const pick = () => { activeIdx = i; auto = false; document.getElementById('autoString').checked = false; renderStrings(); if (toneOn) startTone(); };
+      const pick = () => {
+        if (!auto && i === activeIdx) { auto = true; } else { activeIdx = i; auto = false; }
+        renderStrings(); if (toneOn) startTone();
+      };
       b.addEventListener('click', pick);
       b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
       stringsEl.appendChild(b);
@@ -338,7 +341,6 @@
     activeIdx = Math.min(activeIdx, current.cuerdas.length - 1);
     renderTuning(); if (toneOn) startTone();
   });
-  document.getElementById('autoString').addEventListener('change', (e) => { auto = e.target.checked; });
 
   // ---------- Medidor ----------
   const needle = document.getElementById('needle');
@@ -347,6 +349,7 @@
   const targetOut = document.getElementById('targetOut');
   const meter = document.getElementById('meter');
   const status = document.getElementById('status');
+  const STATUS_DEFAULT = status.textContent;
   (function drawTicks() {
     const g = document.getElementById('ticks');
     let s = '';
@@ -357,7 +360,8 @@
     }
     g.innerHTML = s;
   })();
-  function updateTarget() { targetOut.textContent = fmtHz(hzOf(current, activeIdx)); }
+  const targetNote = document.getElementById('targetNote');
+  function updateTarget() { const hz = hzOf(current, activeIdx); targetOut.textContent = fmtHz(hz); targetNote.textContent = `(${noteLabel(hz)})`; }
   function showReading(hz) {
     if (!hz) {
       centsOut.innerHTML = '—<small>cents</small>'; freqOut.textContent = '—';
@@ -397,7 +401,7 @@
     const src = c.createMediaStreamSource(micStream);
     analyser = c.createAnalyser(); analyser.fftSize = 8192; analyser.smoothingTimeConstant = 0;
     src.connect(analyser);
-    micOn = true; micBtn.textContent = 'Detener micrófono'; status.classList.remove('err'); status.textContent = 'Escuchando.';
+    micOn = true; micBtn.textContent = 'Detener micrófono'; status.classList.remove('err'); status.textContent = STATUS_DEFAULT;
     const buf = new Float32Array(analyser.fftSize);
     const tick = () => {
       analyser.getFloatTimeDomainData(buf);
@@ -412,7 +416,7 @@
     cancelAnimationFrame(raf); micOn = false;
     if (micStream) micStream.getTracks().forEach(t => t.stop());
     micStream = null; analyser = null; history.length = 0;
-    micBtn.textContent = 'Micrófono'; status.textContent = 'Micrófono detenido.'; showReading(0);
+    micBtn.textContent = 'Micrófono'; status.textContent = STATUS_DEFAULT; showReading(0);
   }
   micBtn.addEventListener('click', () => micOn ? stopMic() : startMic());
   const median = (a) => { const s = a.slice().sort((x, y) => x - y); return s[s.length >> 1]; };
