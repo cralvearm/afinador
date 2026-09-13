@@ -1,0 +1,288 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>point/wave, acorde ambiental</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f2f3f0; --surface: #ffffff; --ink: #1b1d1c; --muted: #666b67;
+    --line: #d5d8d3; --line-strong: #a9aea9;
+    --accent: #1f7a62; --accent-soft: #d8ede5; --warn: #b8731a;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "IBM Plex Sans", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151716; --surface: #1e2120; --ink: #ecede9; --muted: #9ba19c;
+      --line: #343836; --line-strong: #5a605c; --accent: #4fc39f; --accent-soft: #1d3a31; --warn: #e0a457;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151716; --surface: #1e2120; --ink: #ecede9; --muted: #9ba19c;
+    --line: #343836; --line-strong: #5a605c; --accent: #4fc39f; --accent-soft: #1d3a31; --warn: #e0a457;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  main { max-width: 640px; margin: 0 auto; padding: 20px 16px 60px; display: grid; gap: 22px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  h1 { font-size: 17px; font-weight: 600; margin: 0; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  select, input, button { font: inherit; color: inherit; }
+  select { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 6px; padding: 8px 10px; width: 100%; }
+  button { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 6px; padding: 10px 18px; cursor: pointer; }
+  button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  button.running { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .field { display: grid; gap: 4px; }
+  .field label { font-size: 12px; color: var(--muted); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 14px; }
+  .controls { display: flex; justify-content: center; }
+  .clock { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: center; color: var(--muted); font-size: 13px; min-height: 1.4em; }
+
+  .fader { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+  .fader label { font-size: 12px; color: var(--muted); }
+  .fader output { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; min-width: 6ch; text-align: right; }
+  input[type="range"] { width: 100%; accent-color: var(--ink); }
+
+  .meter { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 60ms linear; }
+  .meter.hot i { background: var(--warn); }
+  .meters { display: grid; gap: 6px; }
+  .meters .lab { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-family: var(--mono); }
+
+  .chords { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .chord { border: 1px solid var(--line); border-radius: 6px; padding: 8px 6px; text-align: center; display: grid; gap: 2px; }
+  .chord .name { font-size: 13px; font-weight: 500; }
+  .chord .hz { font-family: var(--mono); font-size: 10px; color: var(--muted); line-height: 1.5; }
+  .chord.on { background: var(--accent-soft); border-color: var(--accent); }
+  .chord .bar { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .chord .bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+  @media (max-width: 480px) { .chords { grid-template-columns: repeat(2, 1fr); } }
+
+  .status { font-size: 13px; color: var(--muted); min-height: 1.4em; }
+  .status.err { color: var(--warn); }
+  .note { font-size: 12px; color: var(--muted); }
+</style>
+
+<main>
+  <header>
+    <h1>point/wave, acorde ambiental</h1>
+    <span class="eyebrow">Catherine Lamb, 2015</span>
+  </header>
+
+  <section class="panel">
+    <div class="row">
+      <div class="field"><label for="inSel">Entrada</label><select id="inSel"><option value="">micrófono por defecto</option></select></div>
+      <div class="field" id="outField"><label for="outSel">Salida</label><select id="outSel"><option value="">salida por defecto</option></select></div>
+    </div>
+    <div class="controls"><button class="primary" id="startBtn">Iniciar</button></div>
+    <div class="clock" id="clock"></div>
+    <div class="status" id="status">Elige la entrada, baja el volumen y pulsa "Iniciar". El ciclo parte por los treses.</div>
+  </section>
+
+  <section class="panel">
+    <div class="fader">
+      <label for="vol">Volumen</label>
+      <input type="range" id="vol" min="-60" max="12" step="0.5" value="-12">
+      <output id="volOut">−12 dB</output>
+    </div>
+    <div class="meters">
+      <div class="lab"><span>entrada</span><span id="inDb">—</span></div>
+      <div class="meter" id="inMeter"><i></i></div>
+      <div class="lab"><span>salida</span><span id="outDb">—</span></div>
+      <div class="meter" id="outMeter"><i></i></div>
+    </div>
+  </section>
+
+  <section class="chords" id="chords"></section>
+
+  <p class="note" id="info"></p>
+</main>
+
+<script>
+(() => {
+  // Traslado del archivo point.wave.scd de Catherine Lamb (31 de mayo de 2015). Los valores son los suyos.
+  // SynthDef \partialtheory: entrada estéreo, BPF con rq 0,001 por altura, envolvente linen (0,5 s, 130 s, 0,5 s)
+  // a nivel 61, AmpComp respecto de 60 Hz con exponente 0,23, LeakDC a la salida.
+  const CHORDS = [
+    { id: 'threes',      nombre: 'treses',       hz: [180, 240, 360, 480, 540, 720] },
+    { id: 'sevens',      nombre: 'sietes',       hz: [280, 315, 420, 560, 630] },
+    { id: 'elevens',     nombre: 'onces',        hz: [220, 330, 440, 660] },
+    { id: 'thirty_ones', nombre: 'treintaiunos', hz: [232.5, 310, 465, 620] },
+  ];
+  const TIME1 = 120, TIME2 = 10, FADE = 0.5, LVL = 61, RQ = 0.001, AMP_ROOT = 60, AMP_EXP = 0.23;
+  const TOTAL = TIME1 + TIME2;                         // 130 s de meseta
+  const WAIT_MIN = 53, WAIT_MAX = 67;                  // rrand(53,67) entre acordes
+  const STOP_RELEASE = 1.5;                            // gate -1.5 al detener
+  const rrand = (a, b) => a + Math.random() * (b - a);
+  const ampComp = (hz) => Math.pow(AMP_ROOT / hz, AMP_EXP);
+
+  // ---------- Interfaz ----------
+  const $ = (id) => document.getElementById(id);
+  const startBtn = $('startBtn'), status = $('status'), clock = $('clock'), info = $('info');
+  const inSel = $('inSel'), outSel = $('outSel'), outField = $('outField');
+  const vol = $('vol'), volOut = $('volOut');
+  const chordsEl = $('chords');
+  const cards = {};
+  for (const c of CHORDS) {
+    const d = document.createElement('div'); d.className = 'chord'; d.id = 'card-' + c.id;
+    d.innerHTML = `<span class="name">${c.nombre}</span><span class="hz">${c.hz.map(h => String(h).replace('.', ',')).join('<br>')}</span><div class="bar"><i></i></div>`;
+    chordsEl.appendChild(d); cards[c.id] = d;
+  }
+  const fmtDb = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1).replace('.', ',') + ' dB';
+  vol.addEventListener('input', () => { volOut.textContent = fmtDb(+vol.value); if (master) master.gain.setTargetAtTime(Math.pow(10, vol.value / 20), ctx.currentTime, 0.02); });
+  volOut.textContent = fmtDb(+vol.value);
+
+  // ---------- Audio ----------
+  let ctx = null, stream = null, source = null, splitter = null, master = null, inAn = null, outAn = null;
+  let running = false, timers = [], voices = [], cycleStart = 0;
+
+  async function listDevices() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const keepIn = inSel.value, keepOut = outSel.value;
+    inSel.innerHTML = '<option value="">micrófono por defecto</option>';
+    outSel.innerHTML = '<option value="">salida por defecto</option>';
+    for (const d of devs) {
+      const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || (d.kind === 'audioinput' ? 'entrada' : 'salida') + ' ' + (d.deviceId || '').slice(0, 6);
+      if (d.kind === 'audioinput') inSel.appendChild(o);
+      if (d.kind === 'audiooutput') outSel.appendChild(o);
+    }
+    inSel.value = keepIn; outSel.value = keepOut;
+    // La elección de salida sólo existe donde el navegador la permite (Chrome, Edge).
+    outField.hidden = !(('setSinkId' in AudioContext.prototype) && outSel.options.length > 1);
+  }
+  navigator.mediaDevices && navigator.mediaDevices.addEventListener && navigator.mediaDevices.addEventListener('devicechange', listDevices);
+
+  async function openInput() {
+    const constraints = { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: { ideal: 2 } } };
+    if (inSel.value) constraints.audio.deviceId = { exact: inSel.value };
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
+    if (ctx.state === 'suspended') await ctx.resume();
+    if (outSel.value && ctx.setSinkId) { try { await ctx.setSinkId(outSel.value); } catch (e) {} }
+    source = ctx.createMediaStreamSource(stream);
+    const nch = stream.getAudioTracks()[0].getSettings().channelCount || source.channelCount || 1;
+    splitter = ctx.createChannelSplitter(2);
+    source.connect(splitter);
+    master = ctx.createGain(); master.gain.value = Math.pow(10, vol.value / 20);
+    outAn = ctx.createAnalyser(); outAn.fftSize = 2048;
+    master.connect(outAn); outAn.connect(ctx.destination);
+    inAn = ctx.createAnalyser(); inAn.fftSize = 2048; source.connect(inAn);
+    info.textContent = `Entrada de ${nch} canal${nch > 1 ? 'es' : ''} a ${ctx.sampleRate} Hz. Cada canal de entrada va a su canal de salida, como en el original.`;
+    return nch;
+  }
+  function closeInput() {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = null; source = null; splitter = null;
+  }
+
+  // Un Synth \partialtheory: dos filtros (izquierda y derecha) con la misma envolvente.
+  function partialtheory(hz, t0) {
+    const lvl = LVL * ampComp(hz);
+    const env = ctx.createGain(); env.gain.setValueAtTime(0, t0);
+    env.gain.linearRampToValueAtTime(lvl, t0 + FADE);
+    env.gain.setValueAtTime(lvl, t0 + FADE + TOTAL);
+    env.gain.linearRampToValueAtTime(0, t0 + FADE + TOTAL + FADE);
+    const merger = ctx.createChannelMerger(2);
+    for (let ch = 0; ch < 2; ch++) {
+      const bpf = ctx.createBiquadFilter(); bpf.type = 'bandpass'; bpf.frequency.value = hz; bpf.Q.value = 1 / RQ;
+      splitter.connect(bpf, ch); bpf.connect(merger, 0, ch);
+    }
+    // LeakDC: bloqueo de continua a la salida del filtro.
+    const dc = ctx.createBiquadFilter(); dc.type = 'highpass'; dc.frequency.value = 35; dc.Q.value = 0.5;
+    merger.connect(env); env.connect(dc); dc.connect(master);
+    const v = { env, nodes: [merger, env, dc], end: t0 + FADE + TOTAL + FADE, hz };
+    v.timer = setTimeout(() => freeVoice(v), (v.end - ctx.currentTime + 0.2) * 1000);
+    voices.push(v);
+    return v;
+  }
+  function freeVoice(v) {
+    clearTimeout(v.timer);
+    v.nodes.forEach(n => { try { n.disconnect(); } catch (e) {} });
+    voices = voices.filter(x => x !== v);
+  }
+  function playChord(c) {
+    const t0 = ctx.currentTime + 0.05;
+    c.voices = c.hz.map(hz => partialtheory(hz, t0));
+    c.started = t0;
+    cards[c.id].classList.add('on');
+  }
+
+  // Routine ~cycle: los cuatro acordes en orden, con espera rrand(53,67) tras cada uno, sin fin.
+  function schedule(i) {
+    const c = CHORDS[i % CHORDS.length];
+    playChord(c);
+    const wait = rrand(WAIT_MIN, WAIT_MAX);
+    timers.push(setTimeout(() => running && schedule(i + 1), wait * 1000));
+  }
+
+  async function start() {
+    startBtn.disabled = true; status.classList.remove('err');
+    try { await openInput(); }
+    catch (e) {
+      status.textContent = 'No se pudo abrir la entrada. Revisa el permiso de micrófono y la interfaz elegida.'; status.classList.add('err');
+      startBtn.disabled = false; return;
+    }
+    await listDevices();
+    running = true; cycleStart = ctx.currentTime;
+    startBtn.textContent = 'Detener'; startBtn.classList.add('running'); startBtn.classList.remove('primary'); startBtn.disabled = false;
+    status.textContent = 'Ciclo en marcha. El acorde ambiental queda antes y después de la guitarra.';
+    schedule(0);
+    tick();
+  }
+  function stop() {
+    running = false;
+    timers.forEach(clearTimeout); timers = [];
+    const now = ctx.currentTime;
+    for (const v of voices.slice()) {
+      v.env.gain.cancelScheduledValues(now);
+      v.env.gain.setValueAtTime(v.env.gain.value, now);
+      v.env.gain.linearRampToValueAtTime(0, now + STOP_RELEASE);
+      clearTimeout(v.timer); v.timer = setTimeout(() => freeVoice(v), (STOP_RELEASE + 0.2) * 1000);
+    }
+    setTimeout(closeInput, (STOP_RELEASE + 0.3) * 1000);
+    for (const c of CHORDS) { cards[c.id].classList.remove('on'); cards[c.id].querySelector('.bar i').style.width = '0'; c.started = null; }
+    startBtn.textContent = 'Iniciar'; startBtn.classList.remove('running'); startBtn.classList.add('primary');
+    status.textContent = 'Detenido. Al volver a iniciar, el ciclo parte de nuevo por los treses.';
+    clock.textContent = '';
+  }
+  startBtn.addEventListener('click', () => running ? stop() : start());
+
+  // ---------- Medidores y reloj ----------
+  const bufIn = new Float32Array(2048), bufOut = new Float32Array(2048);
+  const rmsDb = (an, buf) => { an.getFloatTimeDomainData(buf); let s = 0; for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i]; const r = Math.sqrt(s / buf.length); return r > 0 ? 20 * Math.log10(r) : -100; };
+  function setMeter(id, db, labId) {
+    const el = $(id); const pct = Math.max(0, Math.min(100, (db + 60) / 60 * 100));
+    el.querySelector('i').style.width = pct + '%'; el.classList.toggle('hot', db > -3);
+    $(labId).textContent = db <= -99 ? '—' : fmtDb(Math.round(db * 10) / 10);
+  }
+  function tick() {
+    if (!ctx || !inAn) return;
+    setMeter('inMeter', rmsDb(inAn, bufIn), 'inDb');
+    setMeter('outMeter', rmsDb(outAn, bufOut), 'outDb');
+    if (running) {
+      const t = ctx.currentTime - cycleStart;
+      const m = Math.floor(t / 60), s = Math.floor(t % 60);
+      clock.textContent = `${m}:${String(s).padStart(2, '0')} desde el inicio`;
+      for (const c of CHORDS) {
+        const bar = cards[c.id].querySelector('.bar i');
+        if (c.started != null) {
+          const el = ctx.currentTime - c.started, dur = FADE + TOTAL + FADE;
+          if (el >= dur) { c.started = null; cards[c.id].classList.remove('on'); bar.style.width = '0'; }
+          else bar.style.width = (el / dur * 100) + '%';
+        }
+      }
+    }
+    if (running || voices.length) requestAnimationFrame(tick);
+  }
+
+  // Pedir permiso una vez para poder listar las interfaces con nombre.
+  (async () => {
+    try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach(t => t.stop()); } catch (e) {}
+    await listDevices();
+  })();
+})();
+</script>
