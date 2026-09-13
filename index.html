@@ -70,16 +70,13 @@
   /* Cuerdas */
   .strings { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
   .string {
-    display: grid; gap: 2px; padding: 8px 4px; text-align: center;
+    display: grid; padding: 10px 4px; text-align: center;
     border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
     cursor: pointer; user-select: none; min-width: 0;
   }
-  .string .n { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-  .string .note { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .string .ratio { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; min-height: 1.2em; }
+  .string .n { font-family: var(--mono); font-size: 18px; }
   .string.active { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
   .string.playing .n::after { content: " ♪"; color: var(--accent); }
-  @media (max-width: 420px) { .string .ratio { display: none; } .string .note { font-size: 12px; } }
 
   /* Medidor */
   .meter { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 16px 12px; display: grid; gap: 10px; }
@@ -327,8 +324,7 @@
       const b = document.createElement('div');
       b.className = 'string' + (i === activeIdx ? ' active' : '');
       b.dataset.i = i; b.setAttribute('role', 'button'); b.tabIndex = 0;
-      const hz = hzOf(current, i);
-      b.innerHTML = `<span class="n">${i + 1}</span><span class="note">${noteLabel(hz)}</span><span class="ratio">${c.razon || ''}</span>`;
+      b.innerHTML = `<span class="n">${i + 1}</span>`;
       const pick = () => { activeIdx = i; auto = false; document.getElementById('autoString').checked = false; renderStrings(); if (toneOn) startTone(); };
       b.addEventListener('click', pick);
       b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
