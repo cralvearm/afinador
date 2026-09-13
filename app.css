@@ -120,3 +120,7 @@
   }
 
 [hidden] { display: none !important; }
+
+.sens { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; font-size: 12px; color: var(--muted); }
+.sens input[type="range"] { width: 100%; accent-color: var(--ink); }
+.sens output { font-family: var(--mono); font-variant-numeric: tabular-nums; min-width: 6ch; text-align: right; }

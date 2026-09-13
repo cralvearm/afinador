@@ -42,6 +42,7 @@
   let current = all()[0] || null;
   let activeIdx = current ? Math.min(2, current.cuerdas.length - 1) : 0;
   let auto = true;
+  let candidata = null; // cuerda que el detector propone, a la espera de confirmarse
   const fundBase = new Map(); // fundamental guardada de cada afinación, para saber si hay transposición sin guardar
 
   // ---------- Selector y cuerdas ----------
@@ -151,7 +152,10 @@
     if (auto) {
       let best = 0, bestD = Infinity;
       current.cuerdas.forEach((c, i) => { const d = Math.abs(1200 * Math.log2(hz / hzOf(current, i))); if (d < bestD) { bestD = d; best = i; } });
-      if (best !== activeIdx && bestD < 300) { activeIdx = best; renderStrings(); }
+      if (best !== activeIdx && bestD < 300) {
+        candidata = (candidata && candidata.i === best) ? { i: best, n: candidata.n + 1 } : { i: best, n: 1 };
+        if (candidata.n >= 4) { activeIdx = best; candidata = null; renderStrings(); }
+      } else candidata = null;
     }
     const target = hzOf(current, activeIdx);
     const cents = 1200 * Math.log2(hz / target);
@@ -166,6 +170,18 @@
   // ---------- Micrófono y detección ----------
   let ctx = null, analyser = null, micStream = null, raf = 0, micOn = false;
   const history = [];
+  // Claridad mínima del periodo detectado (0 a 1) y umbral de nivel de entrada, ajustable en la página.
+  const CLARIDAD = 0.85;
+  const sensInput = document.getElementById('sens');
+  const umbral = () => Math.pow(10, (sensInput ? +sensInput.value : -40) / 20);
+  if (sensInput) sensInput.addEventListener('input', () => { document.getElementById('sensOut').textContent = '−' + Math.abs(+sensInput.value) + ' dB'; });
+  // Lectura estable: se muestra sólo cuando la mayoría de las últimas lecturas coincide con la mediana.
+  function lecturaEstable() {
+    if (history.length < 4) return 0;
+    const m = median(history);
+    const cerca = history.filter(h => Math.abs(1200 * Math.log2(h / m)) < 25).length;
+    return cerca >= Math.ceil(history.length * 0.7) ? m : 0;
+  }
   function ensureCtx() { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; }
   async function startMic() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -186,8 +202,9 @@
     const tick = () => {
       analyser.getFloatTimeDomainData(buf);
       const hz = detect(buf, c.sampleRate);
-      if (hz > 0) { history.push(hz); if (history.length > 5) history.shift(); showReading(median(history)); }
-      else { if (history.length) history.shift(); if (!history.length) showReading(0); }
+      if (hz > 0) { history.push(hz); if (history.length > 6) history.shift(); }
+      else if (history.length) history.shift();
+      showReading(lecturaEstable());
       raf = requestAnimationFrame(tick);
     };
     tick();
@@ -218,7 +235,7 @@
   function detect(buf, sr) {
     const n = buf.length;
     let rms = 0; for (let i = 0; i < n; i++) rms += buf[i] * buf[i];
-    rms = Math.sqrt(rms / n); if (rms < 0.004) return -1;
+    rms = Math.sqrt(rms / n); if (rms < umbral()) return -1;
     const minLag = Math.floor(sr / 1200), maxLag = Math.floor(sr / 30);
     const nsdf = new Float32Array(maxLag + 1);
     for (let tau = minLag; tau <= maxLag; tau++) {
@@ -237,8 +254,8 @@
     }
     if (!peaks.length) return -1;
     const gmax = Math.max(...peaks.map(p => p[1]));
-    if (gmax < 0.6) return -1;
-    const chosen = peaks.find(p => p[1] >= 0.9 * gmax)[0];
+    if (gmax < CLARIDAD) return -1;
+    const chosen = peaks.find(p => p[1] >= 0.93 * gmax)[0];
     const a = nsdf[chosen - 1] || 0, b = nsdf[chosen], c2 = nsdf[chosen + 1] || 0;
     const denom = a - 2 * b + c2;
     const shift = denom ? 0.5 * (a - c2) / denom : 0;
