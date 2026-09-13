@@ -229,6 +229,14 @@
       fundamental: 220.26, fijo: true,
       cuerdas: [{ razon: '34/25' }, { razon: '29/22' }, { razon: '31/24' }, { razon: '23/18' }, { razon: '37/30' }, { razon: '19/16' }],
     },
+    {
+      id: 'sin-titulo-30', nombre: 'sin título #30', fijo: true,
+      cuerdas: [{ hz: 329.63 }, { hz: 228.148 }, { hz: 196 }, { hz: 144.212 }, { hz: 110 }, { hz: 80.74 }],
+    },
+    {
+      id: 'singularidad-1', nombre: 'singularidad #1', fijo: true,
+      cuerdas: [{ hz: 323.31 }, { hz: 242.8 }, { hz: 196 }, { hz: 143.37 }, { hz: 112.09 }, { hz: 82.4 }],
+    },
   ];
   const KEY = 'afinador.afinaciones';
   const loadSaved = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } };
