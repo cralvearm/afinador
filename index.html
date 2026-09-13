@@ -562,8 +562,7 @@
       const d = document.createElement('div'); d.className = 'lib-item';
       d.innerHTML = `<div><div class="name">${esc(t.nombre)}</div><div class="src">${t.cuerdas.map((c, i) => fmtHz(hzOf(t, i))).reverse().join(' · ')} Hz</div></div>`;
       const right = document.createElement('div');
-      if (t.fijo) { right.innerHTML = '<span class="tag">de fábrica</span>'; }
-      else {
+      if (!t.fijo) {
         const del = document.createElement('button'); del.className = 'ghost'; del.textContent = 'Borrar';
         del.addEventListener('click', () => {
           if (!confirm(`¿Borrar "${t.nombre}"?`)) return;
