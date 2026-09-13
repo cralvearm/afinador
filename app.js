@@ -138,16 +138,20 @@
     const [nombre, desv] = noteLabel(hz).split(' ');
     targetNote.textContent = `(${nombre.replace(/\d+$/, '')} ${desv} cents)`;
   }
-  let centsSuave = null;
+  let centsSuave = null, ultimaLectura = 0;
+  const RETENCION = 1200; // ms que la última lectura queda a la vista sin señal nueva
   function showReading(hz) {
     if (!current) return;
     if (!hz) {
+      // Sin señal, la lectura anterior se retiene un momento; después se apaga sin mover el trazado.
+      if (performance.now() - ultimaLectura < RETENCION) return;
       centsSuave = null;
-      centsOut.hidden = true; freqLine.hidden = true;
+      centsOut.style.visibility = 'hidden'; freqLine.style.visibility = 'hidden';
       meter.classList.remove('in-tune'); needle.setAttribute('transform', 'translate(300 0)');
       return;
     }
-    centsOut.hidden = false; freqLine.hidden = false;
+    ultimaLectura = performance.now();
+    centsOut.style.visibility = 'visible'; freqLine.style.visibility = 'visible';
     if (auto) {
       let best = 0, bestD = Infinity;
       current.cuerdas.forEach((c, i) => { const d = Math.abs(1200 * Math.log2(hz / hzOf(current, i))); if (d < bestD) { bestD = d; best = i; } });
