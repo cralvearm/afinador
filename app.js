@@ -138,7 +138,7 @@
     const [nombre, desv] = noteLabel(hz).split(' ');
     targetNote.textContent = `(${nombre.replace(/\d+$/, '')} ${desv} cents)`;
   }
-  let centsSuave = null, ultimaLectura = 0;
+  let centsSuave = null, ultimaLectura = 0, ultimoTexto = 0;
   const RETENCION = 1200; // ms que la última lectura queda a la vista sin señal nueva
   function showReading(hz) {
     if (!current) return;
@@ -162,14 +162,19 @@
     }
     const target = hzOf(current, activeIdx);
     const crudo = 1200 * Math.log2(hz / target);
-    // Suavizado de la aguja: cada lectura mueve una cuarta parte del camino hacia el valor nuevo.
-    centsSuave = centsSuave == null || Math.abs(crudo - centsSuave) > 40 ? crudo : centsSuave + 0.25 * (crudo - centsSuave);
+    // Una lectura a más de 300 cents de la cuerda elegida es otra cuerda o un armónico: se descarta.
+    if (Math.abs(crudo) > 300) { ultimaLectura = performance.now(); return; }
+    // Suavizado de la aguja: cada lectura mueve una décima parte del camino hacia el valor nuevo.
+    centsSuave = centsSuave == null ? crudo : centsSuave + 0.1 * (crudo - centsSuave);
     const cents = centsSuave;
     const clamped = Math.max(-50, Math.min(50, cents));
     needle.setAttribute('transform', `translate(${300 + clamped * 5.4} 0)`);
-    const r = Math.round(cents);
-    centsOut.innerHTML = `${r > 0 ? '+' : r < 0 ? '−' : ''}${Math.abs(r)}<small>cents</small>`;
-    freqOut.textContent = fmtHz(hz);
+    if (performance.now() - ultimoTexto > 125) {
+      ultimoTexto = performance.now();
+      const r = Math.round(cents);
+      centsOut.innerHTML = `${r > 0 ? '+' : r < 0 ? '−' : ''}${Math.abs(r)}<small>cents</small>`;
+      freqOut.textContent = fmtHz(target * Math.pow(2, cents / 1200));
+    }
     meter.classList.toggle('in-tune', Math.abs(cents) <= 3);
   }
 
