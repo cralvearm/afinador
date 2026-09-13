@@ -141,9 +141,11 @@
     const [nombre, desv] = noteLabel(hz).split(' ');
     targetNote.textContent = `(${nombre.replace(/\d+$/, '')} ${desv} cents)`;
   }
+  let centsSuave = null;
   function showReading(hz) {
     if (!current) return;
     if (!hz) {
+      centsSuave = null;
       centsOut.hidden = true; freqLine.hidden = true;
       meter.classList.remove('in-tune'); needle.setAttribute('transform', 'translate(300 0)');
       return;
@@ -158,7 +160,10 @@
       } else candidata = null;
     }
     const target = hzOf(current, activeIdx);
-    const cents = 1200 * Math.log2(hz / target);
+    const crudo = 1200 * Math.log2(hz / target);
+    // Suavizado de la aguja: cada lectura mueve una cuarta parte del camino hacia el valor nuevo.
+    centsSuave = centsSuave == null || Math.abs(crudo - centsSuave) > 40 ? crudo : centsSuave + 0.25 * (crudo - centsSuave);
+    const cents = centsSuave;
     const clamped = Math.max(-50, Math.min(50, cents));
     needle.setAttribute('transform', `translate(${300 + clamped * 5.4} 0)`);
     const r = Math.round(cents);
@@ -202,7 +207,7 @@
     const tick = () => {
       analyser.getFloatTimeDomainData(buf);
       const hz = detect(buf, c.sampleRate);
-      if (hz > 0) { history.push(hz); if (history.length > 6) history.shift(); }
+      if (hz > 0) { history.push(hz); if (history.length > 10) history.shift(); }
       else if (history.length) history.shift();
       showReading(lecturaEstable());
       raf = requestAnimationFrame(tick);
