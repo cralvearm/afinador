@@ -205,7 +205,10 @@
       status.textContent = 'Este navegador no da acceso al micrófono. Abre la página por https en Safari o Chrome.'; status.classList.add('err'); return;
     }
     try {
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      const audio = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+      if (inSel && inSel.value) audio.deviceId = { exact: inSel.value };
+      micStream = await navigator.mediaDevices.getUserMedia({ audio });
+      await listInputs();
     } catch (e) {
       micDenied = true;
       status.textContent = 'Sin permiso de micrófono. Revisa el permiso del sitio en el navegador y vuelve a cargar la página.'; status.classList.add('err'); return;
@@ -250,6 +253,24 @@
   // El micrófono se enciende solo. Si el navegador exige un gesto del usuario, se enciende con el primer toque en la página.
   // El botón lo apaga y lo enciende; apagado a mano, no se vuelve a encender solo.
   const micBtn = document.getElementById('micBtn');
+  // Selector de entrada: micrófono interno, interfaz de audio o lo que el sistema ofrezca. Los nombres aparecen tras el primer permiso.
+  const inSel = document.getElementById('inSel');
+  async function listInputs() {
+    if (!inSel || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
+    const keep = inSel.value || localStorage.getItem('afinador.entrada') || '';
+    inSel.innerHTML = '<option value="">entrada por defecto</option>';
+    for (const d of devs) { const o = document.createElement('option'); o.value = d.deviceId; o.textContent = d.label || 'entrada ' + (inSel.options.length); inSel.appendChild(o); }
+    inSel.value = [...inSel.options].some(o => o.value === keep) ? keep : '';
+  }
+  if (inSel) {
+    inSel.addEventListener('change', async () => {
+      try { localStorage.setItem('afinador.entrada', inSel.value); } catch (e) {}
+      if (micOn) { stopMic(); micUserOff = false; micDenied = false; await autoMic(); }
+    });
+    listInputs();
+    navigator.mediaDevices && navigator.mediaDevices.addEventListener && navigator.mediaDevices.addEventListener('devicechange', listInputs);
+  }
   let micStarting = false, micDenied = false, micUserOff = false;
   micBtn.addEventListener('click', (e) => { e.stopPropagation(); if (micOn) { micUserOff = true; stopMic(); } else { micUserOff = false; micDenied = false; autoMic(); } });
   async function autoMic() {
