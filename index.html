@@ -12,6 +12,7 @@
     --line-strong: #a9aea9;
     --accent: #1f7a62;
     --accent-soft: #d8ede5;
+    --off: #b83a2a;
     --warn: #b8731a;
     --warn-soft: #f3e4cf;
     --needle: #1b1d1c;
@@ -23,14 +24,14 @@
       --bg: #151716; --surface: #1e2120; --ink: #ecede9; --muted: #9ba19c;
       --line: #343836; --line-strong: #5a605c;
       --accent: #4fc39f; --accent-soft: #1d3a31; --warn: #e0a457; --warn-soft: #3d2f1a;
-      --needle: #ecede9;
+      --needle: #ecede9; --off: #e0665a;
     }
   }
   :root[data-theme="dark"] {
     --bg: #151716; --surface: #1e2120; --ink: #ecede9; --muted: #9ba19c;
     --line: #343836; --line-strong: #5a605c;
     --accent: #4fc39f; --accent-soft: #1d3a31; --warn: #e0a457; --warn-soft: #3d2f1a;
-    --needle: #ecede9;
+    --needle: #ecede9; --off: #e0665a;
   }
   * { box-sizing: border-box; }
   body {
@@ -85,7 +86,9 @@
   .readout .cents { font-family: var(--mono); font-size: 44px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
   .readout .cents small { font-size: 16px; color: var(--muted); font-weight: 400; margin-left: 4px; }
   .readout .freq { font-family: var(--mono); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .readout .target { font-family: var(--mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .readout .target { font-family: var(--mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--off); }
+  .readout .target #targetNote { font-size: 14px; font-weight: 400; }
+  .meter.in-tune .target { color: var(--accent); }
   .readout .freq b { color: var(--ink); font-weight: 500; }
   .meter.in-tune .cents { color: var(--accent); }
   svg.scale { width: 100%; height: auto; display: block; }
@@ -141,7 +144,7 @@
     <div class="readout">
       <div class="cents" id="centsOut" hidden>—<small>cents</small></div>
       <div class="freq" id="freqLine" hidden><b id="freqOut">—</b> Hz</div>
-      <div class="target">objetivo: <span id="targetOut">—</span> Hz <span id="targetNote"></span></div>
+      <div class="target"><span id="targetOut">—</span> Hz <span id="targetNote"></span></div>
     </div>
     <svg class="scale" viewBox="0 0 600 84" aria-hidden="true">
       <g id="ticks" stroke="var(--line-strong)" stroke-width="1"></g>
