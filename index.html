@@ -81,10 +81,11 @@
 
   /* Medidor */
   .meter { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 16px 12px; display: grid; gap: 10px; }
-  .readout { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .readout { display: grid; justify-items: center; text-align: center; gap: 4px; }
   .readout .cents { font-family: var(--mono); font-size: 44px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
   .readout .cents small { font-size: 16px; color: var(--muted); font-weight: 400; margin-left: 4px; }
-  .readout .freq { font-family: var(--mono); font-size: 14px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .readout .freq { font-family: var(--mono); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .readout .target { font-family: var(--mono); font-size: 15px; font-variant-numeric: tabular-nums; }
   .readout .freq b { color: var(--ink); font-weight: 500; }
   .meter.in-tune .cents { color: var(--accent); }
   svg.scale { width: 100%; height: auto; display: block; }
@@ -139,7 +140,8 @@
   <section class="meter" id="meter">
     <div class="readout">
       <div class="cents" id="centsOut">—<small>cents</small></div>
-      <div class="freq"><b id="freqOut">—</b> Hz<br>objetivo: <span id="targetOut">—</span> Hz <span id="targetNote"></span></div>
+      <div class="freq"><b id="freqOut">—</b> Hz</div>
+      <div class="target">objetivo: <span id="targetOut">—</span> Hz <span id="targetNote"></span></div>
     </div>
     <svg class="scale" viewBox="0 0 600 84" aria-hidden="true">
       <g id="ticks" stroke="var(--line-strong)" stroke-width="1"></g>
