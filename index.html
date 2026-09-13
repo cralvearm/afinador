@@ -364,7 +364,11 @@
     g.innerHTML = s;
   })();
   const targetNote = document.getElementById('targetNote');
-  function updateTarget() { const hz = hzOf(current, activeIdx); targetOut.textContent = fmtHz(hz); targetNote.textContent = `(${noteLabel(hz)})`; }
+  function updateTarget() {
+    const hz = hzOf(current, activeIdx); targetOut.textContent = fmtHz(hz);
+    const [nombre, desv] = noteLabel(hz).split(' ');
+    targetNote.textContent = `(${nombre.replace(/\d+$/, '')} ${desv} cents)`;
+  }
   function showReading(hz) {
     if (!hz) {
       centsOut.hidden = true; freqLine.hidden = true;
