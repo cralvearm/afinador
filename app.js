@@ -165,7 +165,12 @@
     // Una lectura a más de 300 cents de la cuerda elegida es otra cuerda o un armónico: se descarta.
     if (Math.abs(crudo) > 300) { ultimaLectura = performance.now(); return; }
     // Suavizado de la aguja: cada lectura mueve una décima parte del camino hacia el valor nuevo.
-    centsSuave = centsSuave == null ? crudo : centsSuave + 0.1 * (crudo - centsSuave);
+    if (centsSuave == null) centsSuave = crudo;
+    else {
+      const d = Math.abs(crudo - centsSuave);
+      const alfa = d > 10 ? 0.3 : d < 3 ? 0.06 : 0.06 + (d - 3) / 7 * 0.24;
+      centsSuave += alfa * (crudo - centsSuave);
+    }
     const cents = centsSuave;
     const clamped = Math.max(-50, Math.min(50, cents));
     needle.setAttribute('transform', `translate(${300 + clamped * 5.4} 0)`);
@@ -175,7 +180,8 @@
       centsOut.innerHTML = `${r > 0 ? '+' : r < 0 ? '−' : ''}${Math.abs(r)}<small>cents</small>`;
       freqOut.textContent = fmtHz(target * Math.pow(2, cents / 1200));
     }
-    meter.classList.toggle('in-tune', Math.abs(cents) <= 3);
+    const enVerde = meter.classList.contains('in-tune');
+    meter.classList.toggle('in-tune', enVerde ? Math.abs(cents) <= 6 : Math.abs(cents) <= 3);
   }
 
   // ---------- Micrófono y detección ----------
@@ -188,7 +194,7 @@
   if (sensInput) sensInput.addEventListener('input', () => { document.getElementById('sensOut').textContent = '−' + Math.abs(+sensInput.value) + ' dB'; });
   // Lectura estable: se muestra sólo cuando la mayoría de las últimas lecturas coincide con la mediana.
   function lecturaEstable() {
-    if (history.length < 4) return 0;
+    if (history.length < 3) return 0;
     const m = median(history);
     const cerca = history.filter(h => Math.abs(1200 * Math.log2(h / m)) < 25).length;
     return cerca >= Math.ceil(history.length * 0.7) ? m : 0;
@@ -206,15 +212,30 @@
     }
     const c = ensureCtx();
     const src = c.createMediaStreamSource(micStream);
-    analyser = c.createAnalyser(); analyser.fftSize = 8192; analyser.smoothingTimeConstant = 0;
-    src.connect(analyser);
+    // Filtro de entrada antes de medir: dos pasaaltos y dos pasabajos en cascada (60 a 1000 Hz en guitarra, 30 en bajo).
+    const pasaAltos = CFG.pasaAltos || 60;
+    let nodo = src;
+    for (const [tipo, f] of [['highpass', pasaAltos], ['highpass', pasaAltos], ['lowpass', 1000], ['lowpass', 1000]]) {
+      const bq = c.createBiquadFilter(); bq.type = tipo; bq.frequency.value = f; bq.Q.value = Math.SQRT1_2;
+      nodo.connect(bq); nodo = bq;
+    }
+    // Ventana de análisis de 32768 muestras, unos 0,7 s a 48 kHz; se mide diez veces por segundo.
+    analyser = c.createAnalyser(); analyser.fftSize = 32768; analyser.smoothingTimeConstant = 0;
+    nodo.connect(analyser);
     micOn = true; micBtn.textContent = 'Micrófono on'; status.classList.remove('err'); status.textContent = STATUS_DEFAULT;
     const buf = new Float32Array(analyser.fftSize);
+    const mitad = new Float32Array(analyser.fftSize / 2);
+    let ultimaMedida = 0;
     const tick = () => {
-      analyser.getFloatTimeDomainData(buf);
-      const hz = detect(buf, c.sampleRate);
-      if (hz > 0) { history.push(hz); if (history.length > 10) history.shift(); }
-      else if (history.length) history.shift();
+      if (performance.now() - ultimaMedida >= 100) {
+        ultimaMedida = performance.now();
+        analyser.getFloatTimeDomainData(buf);
+        // Se reduce a la mitad de la frecuencia de muestreo, promediando pares, para abaratar la autocorrelación.
+        for (let i = 0; i < mitad.length; i++) mitad[i] = 0.5 * (buf[2 * i] + buf[2 * i + 1]);
+        const hz = detect(mitad, c.sampleRate / 2);
+        if (hz > 0) { history.push(hz); if (history.length > 5) history.shift(); }
+        else if (history.length) history.shift();
+      }
       showReading(lecturaEstable());
       raf = requestAnimationFrame(tick);
     };
