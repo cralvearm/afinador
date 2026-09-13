@@ -139,8 +139,8 @@
 
   <section class="meter" id="meter">
     <div class="readout">
-      <div class="cents" id="centsOut">—<small>cents</small></div>
-      <div class="freq"><b id="freqOut">—</b> Hz</div>
+      <div class="cents" id="centsOut" hidden>—<small>cents</small></div>
+      <div class="freq" id="freqLine" hidden><b id="freqOut">—</b> Hz</div>
       <div class="target">objetivo: <span id="targetOut">—</span> Hz <span id="targetNote"></span></div>
     </div>
     <svg class="scale" viewBox="0 0 600 84" aria-hidden="true">
@@ -348,6 +348,7 @@
   const needle = document.getElementById('needle');
   const centsOut = document.getElementById('centsOut');
   const freqOut = document.getElementById('freqOut');
+  const freqLine = document.getElementById('freqLine');
   const targetOut = document.getElementById('targetOut');
   const meter = document.getElementById('meter');
   const status = document.getElementById('status');
@@ -366,10 +367,11 @@
   function updateTarget() { const hz = hzOf(current, activeIdx); targetOut.textContent = fmtHz(hz); targetNote.textContent = `(${noteLabel(hz)})`; }
   function showReading(hz) {
     if (!hz) {
-      centsOut.innerHTML = '—<small>cents</small>'; freqOut.textContent = '—';
+      centsOut.hidden = true; freqLine.hidden = true;
       meter.classList.remove('in-tune'); needle.setAttribute('transform', 'translate(300 0)');
       return;
     }
+    centsOut.hidden = false; freqLine.hidden = false;
     if (auto) {
       let best = 0, bestD = Infinity;
       current.cuerdas.forEach((c, i) => { const d = Math.abs(1200 * Math.log2(hz / hzOf(current, i))); if (d < bestD) { bestD = d; best = i; } });
