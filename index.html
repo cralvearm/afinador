@@ -157,6 +157,7 @@
     </svg>
     <div class="status" id="status">Pulsa una cuerda al aire. La cuerda se elige sola por cercanía, o tócala arriba para fijarla.</div>
     <div class="controls">
+      <button id="micBtn">Micrófono off</button>
       <button id="toneBtn">Tono de referencia</button>
     </div>
   </section>
@@ -416,7 +417,7 @@
     const src = c.createMediaStreamSource(micStream);
     analyser = c.createAnalyser(); analyser.fftSize = 8192; analyser.smoothingTimeConstant = 0;
     src.connect(analyser);
-    micOn = true; status.classList.remove('err'); status.textContent = STATUS_DEFAULT;
+    micOn = true; micBtn.textContent = 'Micrófono on'; status.classList.remove('err'); status.textContent = STATUS_DEFAULT;
     const buf = new Float32Array(analyser.fftSize);
     const tick = () => {
       analyser.getFloatTimeDomainData(buf);
@@ -431,12 +432,15 @@
     cancelAnimationFrame(raf); micOn = false;
     if (micStream) micStream.getTracks().forEach(t => t.stop());
     micStream = null; analyser = null; history.length = 0;
-    status.textContent = STATUS_DEFAULT; showReading(0);
+    micBtn.textContent = 'Micrófono off'; status.textContent = STATUS_DEFAULT; showReading(0);
   }
   // El micrófono se enciende solo. Si el navegador exige un gesto del usuario, se enciende con el primer toque en la página.
-  let micStarting = false, micDenied = false;
+  // El botón lo apaga y lo enciende; apagado a mano, no se vuelve a encender solo.
+  const micBtn = document.getElementById('micBtn');
+  let micStarting = false, micDenied = false, micUserOff = false;
+  micBtn.addEventListener('click', (e) => { e.stopPropagation(); if (micOn) { micUserOff = true; stopMic(); } else { micUserOff = false; micDenied = false; autoMic(); } });
   async function autoMic() {
-    if (micOn || micStarting || micDenied) return;
+    if (micOn || micStarting || micDenied || micUserOff) return;
     micStarting = true;
     try { await startMic(); } finally { micStarting = false; }
     if (micOn && ctx && ctx.state === 'suspended') ctx.resume();
