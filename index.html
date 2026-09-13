@@ -155,9 +155,8 @@
         <text x="435" y="72">+25</text><text x="570" y="72">+50</text>
       </g>
     </svg>
-    <div class="status" id="status">Toca "Micrófono" y pulsa una cuerda al aire. La cuerda se elige sola por cercanía, o tócala arriba para fijarla.</div>
+    <div class="status" id="status">Pulsa una cuerda al aire. La cuerda se elige sola por cercanía, o tócala arriba para fijarla.</div>
     <div class="controls">
-      <button class="primary" id="micBtn">Micrófono</button>
       <button id="toneBtn">Tono de referencia</button>
     </div>
   </section>
@@ -393,7 +392,6 @@
 
   // ---------- Micrófono y detección ----------
   let ctx = null, analyser = null, micStream = null, raf = 0, micOn = false;
-  const micBtn = document.getElementById('micBtn');
   const history = [];
   function ensureCtx() { if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.state === 'suspended') ctx.resume(); return ctx; }
   async function startMic() {
@@ -403,13 +401,14 @@
     try {
       micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
     } catch (e) {
-      status.textContent = 'Sin permiso de micrófono. Revisa el permiso del sitio en el navegador y vuelve a intentarlo.'; status.classList.add('err'); return;
+      micDenied = true;
+      status.textContent = 'Sin permiso de micrófono. Revisa el permiso del sitio en el navegador y vuelve a cargar la página.'; status.classList.add('err'); return;
     }
     const c = ensureCtx();
     const src = c.createMediaStreamSource(micStream);
     analyser = c.createAnalyser(); analyser.fftSize = 8192; analyser.smoothingTimeConstant = 0;
     src.connect(analyser);
-    micOn = true; micBtn.textContent = 'Detener micrófono'; status.classList.remove('err'); status.textContent = STATUS_DEFAULT;
+    micOn = true; status.classList.remove('err'); status.textContent = STATUS_DEFAULT;
     const buf = new Float32Array(analyser.fftSize);
     const tick = () => {
       analyser.getFloatTimeDomainData(buf);
@@ -424,9 +423,19 @@
     cancelAnimationFrame(raf); micOn = false;
     if (micStream) micStream.getTracks().forEach(t => t.stop());
     micStream = null; analyser = null; history.length = 0;
-    micBtn.textContent = 'Micrófono'; status.textContent = STATUS_DEFAULT; showReading(0);
+    status.textContent = STATUS_DEFAULT; showReading(0);
   }
-  micBtn.addEventListener('click', () => micOn ? stopMic() : startMic());
+  // El micrófono se enciende solo. Si el navegador exige un gesto del usuario, se enciende con el primer toque en la página.
+  let micStarting = false, micDenied = false;
+  async function autoMic() {
+    if (micOn || micStarting || micDenied) return;
+    micStarting = true;
+    try { await startMic(); } finally { micStarting = false; }
+    if (micOn && ctx && ctx.state === 'suspended') ctx.resume();
+  }
+  ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { autoMic(); if (ctx && ctx.state === 'suspended') ctx.resume(); }, { passive: true }));
+  window.addEventListener('load', autoMic);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !micOn) { micDenied = false; autoMic(); } });
   const median = (a) => { const s = a.slice().sort((x, y) => x - y); return s[s.length >> 1]; };
 
   // Método de McLeod simplificado: diferencia cuadrática normalizada, primer pico claro, interpolación parabólica.
