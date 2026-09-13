@@ -75,11 +75,11 @@
     cursor: pointer; user-select: none; min-width: 0;
   }
   .string .n { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-  .string .hz { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .string .note { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .string .note { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .string .ratio { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; min-height: 1.2em; }
   .string.active { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
   .string.playing .n::after { content: " ♪"; color: var(--accent); }
-  @media (max-width: 420px) { .string .note { display: none; } .string .hz { font-size: 12px; } }
+  @media (max-width: 420px) { .string .ratio { display: none; } .string .note { font-size: 12px; } }
 
   /* Medidor */
   .meter { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 16px 12px; display: grid; gap: 10px; }
@@ -328,7 +328,7 @@
       b.className = 'string' + (i === activeIdx ? ' active' : '');
       b.dataset.i = i; b.setAttribute('role', 'button'); b.tabIndex = 0;
       const hz = hzOf(current, i);
-      b.innerHTML = `<span class="n">${i + 1}</span><span class="hz">${fmtHz(hz)}</span><span class="note">${c.razon ? c.razon + ' · ' : ''}${noteLabel(hz)}</span>`;
+      b.innerHTML = `<span class="n">${i + 1}</span><span class="note">${noteLabel(hz)}</span><span class="ratio">${c.razon || ''}</span>`;
       const pick = () => { activeIdx = i; auto = false; document.getElementById('autoString').checked = false; renderStrings(); if (toneOn) startTone(); };
       b.addEventListener('click', pick);
       b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
