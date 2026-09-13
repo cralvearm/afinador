@@ -88,7 +88,7 @@
   function renderStrings() {
     stringsEl.innerHTML = '';
     meterEl.hidden = !current;
-    if (!current) { document.getElementById('libDetails').open = true; return; }
+    if (!current) { document.getElementById('formDetails').open = true; return; }
     stringsEl.style.gridTemplateColumns = `repeat(${current.cuerdas.length}, 1fr)`;
     // Se dibujan de la más grave a la más aguda, como en el clavijero.
     current.cuerdas.map((c, i) => [c, i]).reverse().forEach(([c, i]) => {

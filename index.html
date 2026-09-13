@@ -44,11 +44,24 @@
   </section>
 
   <details id="libDetails">
-    <summary>Afinaciones guardadas y nueva afinación</summary>
+    <summary>Afinaciones guardadas</summary>
     <div class="lib-list" id="libList"></div>
 
+    <div class="form">
+      <span class="eyebrow" style="margin-top:8px">Copia de respaldo</span>
+      <div class="help">Las afinaciones que agregas quedan en este navegador. Para llevarlas a otro aparato, copia el texto de abajo y pégalo allá con "Importar".</div>
+      <textarea id="ioText" spellcheck="false"></textarea>
+      <div class="actions">
+        <button id="exportBtn">Exportar las guardadas</button>
+        <button id="importBtn">Importar</button>
+      </div>
+      <div class="help" id="ioStatus"></div>
+    </div>
+  </details>
+
+  <details id="formDetails">
+    <summary>Nueva afinación</summary>
     <div class="form" id="form">
-      <span class="eyebrow" style="margin-top:8px">Nueva afinación</span>
       <div class="field"><label for="fName">Nombre</label><input type="text" id="fName" placeholder="Nombre de la pieza o del set"></div>
       <div class="row">
         <div class="field"><label for="fCount">Cuerdas</label><input type="number" id="fCount" min="1" max="12" value=""></div>
@@ -68,17 +81,6 @@
         <button class="primary" id="saveBtn">Guardar</button>
         <button id="clearBtn">Vaciar</button>
       </div>
-    </div>
-
-    <div class="form">
-      <span class="eyebrow" style="margin-top:8px">Copia de respaldo</span>
-      <div class="help">Las afinaciones que agregas quedan en este navegador. Para llevarlas a otro aparato, copia el texto de abajo y pégalo allá con "Importar".</div>
-      <textarea id="ioText" spellcheck="false"></textarea>
-      <div class="actions">
-        <button id="exportBtn">Exportar las guardadas</button>
-        <button id="importBtn">Importar</button>
-      </div>
-      <div class="help" id="ioStatus"></div>
     </div>
   </details>
 </main>
