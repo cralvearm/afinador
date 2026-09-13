@@ -41,7 +41,7 @@
   // ---------- Estado ----------
   let current = all()[0] || null;
   let activeIdx = current ? Math.min(2, current.cuerdas.length - 1) : 0;
-  let auto = true;
+  let auto = false; // la cuerda la elige el intérprete; tocar una tarjeta la fija
   let candidata = null; // cuerda que el detector propone, a la espera de confirmarse
   const fundBase = new Map(); // fundamental guardada de cada afinación, para saber si hay transposición sin guardar
 
@@ -94,13 +94,10 @@
     // Se dibujan de la más grave a la más aguda, como en el clavijero.
     current.cuerdas.map((c, i) => [c, i]).reverse().forEach(([c, i]) => {
       const b = document.createElement('div');
-      b.className = 'string' + (i === activeIdx ? ' active' : '') + (i === activeIdx && !auto ? ' locked' : '');
+      b.className = 'string' + (i === activeIdx ? ' active' : '');
       b.dataset.i = i; b.setAttribute('role', 'button'); b.tabIndex = 0;
       b.innerHTML = `<span class="n">${i + 1}</span>`;
-      const pick = () => {
-        if (!auto && i === activeIdx) { auto = true; } else { activeIdx = i; auto = false; }
-        renderStrings(); if (toneOn) startTone();
-      };
+      const pick = () => { activeIdx = i; renderStrings(); if (toneOn) startTone(); };
       b.addEventListener('click', pick);
       b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
       stringsEl.appendChild(b);
