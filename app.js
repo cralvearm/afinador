@@ -490,6 +490,28 @@
     ioStatus.textContent = added ? `${added} afinación(es) importada(s).` : 'No había afinaciones válidas en el texto.';
   });
 
+  // Respaldo como archivo .json: el mismo formato de texto de arriba, descargado o leído de disco.
+  const exportJsonBtn = document.getElementById('exportJsonBtn');
+  if (exportJsonBtn) exportJsonBtn.addEventListener('click', () => {
+    if (!saved.length) { ioStatus.textContent = 'No hay afinaciones guardadas aparte de las de fábrica.'; return; }
+    const blob = new Blob([JSON.stringify(saved, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'afinaciones.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    ioStatus.textContent = `afinaciones.json con ${saved.length} afinación(es) descargado.`;
+  });
+  const importFile = document.getElementById('importFile');
+  const importJsonBtn = document.getElementById('importJsonBtn');
+  if (importJsonBtn) importJsonBtn.addEventListener('click', () => importFile.click());
+  if (importFile) importFile.addEventListener('change', async () => {
+    const f = importFile.files && importFile.files[0];
+    if (!f) return;
+    try { ioText.value = await f.text(); } catch (e) { ioStatus.textContent = 'No se pudo leer el archivo.'; importFile.value = ''; return; }
+    document.getElementById('importBtn').click();
+    importFile.value = '';
+  });
+
   // ---------- Arranque ----------
   // Afinación recibida por enlace: se importa una sola vez y se limpia la URL para que recargar no la duplique.
   (function importarDesdeEnlace() {
