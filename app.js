@@ -423,6 +423,9 @@
       const d = document.createElement('div'); d.className = 'lib-item';
       d.innerHTML = `<div><div class="name">${esc(t.nombre)}</div><div class="src">${t.cuerdas.map((c, i) => fmtHz(hzOf(t, i))).reverse().join(' · ')} Hz</div></div>`;
       const right = document.createElement('div');
+      const comp = document.createElement('button'); comp.className = 'ghost'; comp.textContent = 'Compartir';
+      comp.addEventListener('click', () => compartirAfinacion(t, comp));
+      right.appendChild(comp);
       if (!t.fijo) {
         const del = document.createElement('button'); del.className = 'ghost'; del.textContent = 'Borrar';
         del.addEventListener('click', () => {
@@ -437,6 +440,31 @@
     }
   }
   const esc = (s) => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+
+  // ---------- Compartir por enlace ----------
+  // La afinación viaja en la URL como base64url de un JSON mínimo; quien la abre la recibe sin tocar los datos del que comparte.
+  const b64url = {
+    enc: (s) => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''),
+    dec: (s) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)))
+  };
+  function enlaceDe(t) {
+    const c = t.cuerdas.map(x => x.razon ? { r: x.razon } : { h: x.hz });
+    const o = { n: t.nombre, c };
+    if (t.fundamental > 0) o.f = t.fundamental;
+    return location.origin + location.pathname + '?a=' + b64url.enc(JSON.stringify(o));
+  }
+  async function compartirAfinacion(t, btn) {
+    const url = enlaceDe(t);
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Afinador · ' + t.nombre, url }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      btn.textContent = '¡Copiado!';
+      setTimeout(() => { btn.textContent = 'Compartir'; }, 1600);
+    } catch (e) { prompt('Copia este enlace para compartir la afinación:', url); }
+  }
 
   // ---------- Exportar e importar ----------
   const ioText = document.getElementById('ioText'), ioStatus = document.getElementById('ioStatus');
@@ -463,5 +491,20 @@
   });
 
   // ---------- Arranque ----------
+  // Afinación recibida por enlace: se importa una sola vez y se limpia la URL para que recargar no la duplique.
+  (function importarDesdeEnlace() {
+    const p = new URLSearchParams(location.search).get('a');
+    if (!p) return;
+    history.replaceState(null, '', location.pathname);
+    let o;
+    try { o = JSON.parse(b64url.dec(p)); } catch (e) { return; }
+    if (!o || !o.n || !Array.isArray(o.c) || !o.c.length) return;
+    const cuerdas = o.c.map(x => x && x.r ? { razon: String(x.r) } : { hz: +(x && x.h) });
+    const t = { id: 'u-' + Date.now().toString(36), nombre: String(o.n), cuerdas };
+    if (o.f > 0) t.fundamental = +o.f;
+    if (!cuerdas.every((c, i) => hzOf(t, i) > 0)) return;
+    saved.push(t); store(saved);
+    current = t; activeIdx = 0;
+  })();
   renderSelect(); renderTuning(); renderLib(); renderEntry();
 })();
