@@ -58,12 +58,15 @@
 
     <div class="form">
       <span class="eyebrow" style="margin-top:8px">Copia de respaldo</span>
-      <div class="help">Las afinaciones que agregas quedan en este navegador. Para llevarlas a otro aparato, copia el texto de abajo y pégalo allá con "Importar".</div>
+      <div class="help">Las afinaciones que agregas quedan en este navegador. Para llevarlas a otro aparato, descarga el archivo .json o copia el texto de abajo e impórtalo allá.</div>
       <textarea id="ioText" spellcheck="false"></textarea>
       <div class="actions">
         <button id="exportBtn">Exportar las guardadas</button>
+        <button id="exportJsonBtn">Descargar .json</button>
         <button id="importBtn">Importar</button>
+        <button id="importJsonBtn">Cargar .json</button>
       </div>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
       <div class="help" id="ioStatus"></div>
     </div>
   </details>
