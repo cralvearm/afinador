@@ -22,7 +22,7 @@ En escritorio y Android la app instalada pide permiso de micrófono la primera v
 - Escucha por el micrófono del aparato o por una interfaz de audio, a elección.
 - Mide la cuerda que el intérprete marca y muestra la desviación en cents respecto de la altura de esa cuerda, con una aguja de −50 a +50 cents. La frecuencia objetivo se pone en verde cuando la cuerda calza.
 - Suena un tono de referencia de la cuerda marcada.
-- Trae afinaciones precargadas y admite otras, que quedan guardadas en el navegador del aparato. "Exportar" e "Importar" las pasan de un aparato a otro.
+- Arranca vacía: cada quien crea sus afinaciones y quedan guardadas en su propio navegador. "Exportar" e "Importar" las pasan de un aparato a otro y "Compartir" entrega un enlace con la afinación incluida.
 - Las afinaciones definidas por razones sobre una fundamental se transponen desde la página con sólo cambiar la fundamental.
 
 ## Cómo se carga una afinación
