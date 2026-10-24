@@ -6,7 +6,8 @@
   const PRELOADED = CFG.afinaciones || [];
   const KEY = CFG.clave || 'afinador.afinaciones';
   const loadSaved = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } };
-  const store = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch {} };
+  const store = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch {} if (list.length) pedirPersistencia(); };
+  function pedirPersistencia() { try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {} }
   let saved = loadSaved();
   const all = () => PRELOADED.concat(saved);
 
@@ -528,5 +529,6 @@
     saved.push(t); store(saved);
     current = t; activeIdx = 0;
   })();
+  if (saved.length) pedirPersistencia(); // ya hay afinaciones guardadas: se pide que el navegador no las descarte
   renderSelect(); renderTuning(); renderLib(); renderEntry();
 })();
