@@ -1,8 +1,21 @@
 # Afinador
 
-Afinador cromático por micrófono para afinaciones no tradicionales. Corre en el navegador, sin instalar nada.
+Afinador cromático por micrófono para afinaciones no tradicionales. Corre en el navegador y también se puede instalar como app, con o sin conexión.
 
 https://cralvearm.github.io/afinador/
+
+## Instalar como app
+
+La página es una PWA: una vez instalada, abre en su propia ventana, sin barra de direcciones, y funciona sin conexión.
+
+- **Escritorio (Chrome, Edge):** el icono de instalación en la barra de direcciones, o menú → "Instalar Afinador" / "Install Afinador".
+- **Firefox en escritorio:** no instala apps web de forma nativa; con la extensión "Progressive Web Apps for Firefox" se puede, o instalar desde Chrome/Edge.
+- **Android (Chrome):** menú → "Instalar aplicación" o "Añadir a pantalla de inicio".
+- **Android (Firefox):** menú → "Añadir a pantalla de inicio" (queda como acceso directo).
+- **iOS (Safari, Firefox, Chrome):** compartir → "Añadir a pantalla de inicio".
+- **macOS (Safari):** Archivo → "Añadir al Dock".
+
+En escritorio y Android la app instalada pide permiso de micrófono la primera vez, igual que la página.
 
 ## Qué hace
 
