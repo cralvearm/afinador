@@ -21,6 +21,16 @@ Afinador cromático web por micrófono para afinaciones no tradicionales: cada c
 - Commits en español, modo imperativo. Cambios mayores por rama + PR (squash) a `main`; docs y detalles directos a `main`.
 - `cristian/` es la copia privada del dueño: sus afinaciones viajan cifradas dentro de su index. No descifrar ni alterar ese blob, y nunca poner claves o afinaciones en claro en este repo. Formato del blob (el código de esa carpeta ya lo implementa): base64 de [salt 16 B][iv 12 B][ciphertext], PBKDF2-SHA256 600 000 iteraciones + AES-256-GCM con WebCrypto; tras descifrar, carga `../app.js` dinámicamente. localStorage: `afinador.cristian.afinaciones` (afinaciones) y `afinador.cristian.clave` (clave recordada por aparato).
 
+## Qué se hizo recientemente (2026-10-24), fuera de Claude
+
+La app la construyó originalmente Claude; estos cambios posteriores se hicieron con otro asistente. Los commits aparecen con el autor del dueño del repo. En orden:
+
+- **PR #1 — PWA**: `manifest.webmanifest` + `sw.js` con precarga y modo offline; enlace compartible por afinación (`?a=<base64url>`); respaldo .json; `navigator.storage.persist()`.
+- **PR #2 — la app pública parte vacía** (`afinaciones: []`): las 8 afinaciones personales del dueño salieron del index público para que terceros la abran sin verlas. Las de cada usuario viven en su propio localStorage. Las 8 originales quedaron respaldadas.
+- **PR #3 y #4 — `cristian/`**: copia privada del dueño dentro de este repo, con sus afinaciones cifradas con clave (ver formato en "Reglas del repo"). Renombrada desde `m/` (la URL vieja ya no existe). En línea: https://cralvearm.github.io/afinador/cristian/
+- **Respaldo maestro en claro**: repo privado `cralvearm/afinador-cristian`, con las 8 afinaciones sin cifrar y el procedimiento de recifrado (ver su propio CLAUDE.md).
+- La clave de cifrado jamás va en este repo ni en ningún archivo: la maneja solo el dueño. Si hay que recifrar, se hace con una clave nueva.
+
 ## Estructura
 
 - `/` — afinador principal (guitarra)
