@@ -11,19 +11,6 @@
 <meta name="apple-mobile-web-app-title" content="Afinador">
 <link rel="stylesheet" href="../app.css">
 
-<div id="candado" style="position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:var(--bg,#f2f3f0);padding:16px;">
-  <div style="width:100%;max-width:22rem;padding:24px;background:var(--surface,#fff);border:1px solid var(--line-strong,#a9aea9);border-radius:10px;">
-    <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#666b67);margin-bottom:6px;">Afinador privado</div>
-    <div style="font-size:15px;color:var(--muted,#666b67);margin-bottom:16px;">Escribe la clave para abrir tus afinaciones.</div>
-    <form id="formClave">
-      <input id="clave" type="password" autocomplete="current-password" placeholder="Clave" style="width:100%;font-family:var(--mono,monospace);font-size:16px;">
-      <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted,#666b67);margin:12px 0 16px;"><input type="checkbox" id="recordar" checked style="width:auto;"> Recordar en este aparato</label>
-      <button type="submit" style="width:100%;background:var(--ink,#1b1d1c);color:var(--bg,#f2f3f0);border:none;border-radius:6px;padding:10px;font-size:15px;">Abrir</button>
-      <div id="claveStatus" style="font-size:13px;color:var(--off,#b83a2a);margin-top:10px;min-height:1.2em;"></div>
-    </form>
-  </div>
-</div>
-
 <main>
   <header>
     <span class="eyebrow">la = 440 Hz</span>
@@ -113,62 +100,19 @@
 window.AFINADOR = {
   clave: 'afinador.cristian.afinaciones',
   cuerdas: 6,
-  afinaciones: [],
+  afinaciones: [
+    { id: 'templo-silbante', nombre: 'Templo silbante', fundamental: 190, fijo: true, cuerdas: [{ razon: '8/5' }, { razon: '5/4' }, { razon: '1/1' }, { razon: '3/4' }, { razon: '225/448' }, { razon: '7/16' }] },
+    { id: 'point-wave', nombre: 'point/wave', fundamental: 110, fijo: true, cuerdas: [{ razon: '63/22' }, { razon: '24/11' }, { razon: '18/11' }, { razon: '14/11' }, { razon: '1/1' }, { razon: '31/44' }] },
+    { id: 'lower-limit-g1', nombre: 'lower limit G1', fundamental: 220.26, fijo: true, cuerdas: [{ razon: '7/6' }, { razon: '55/48' }, { razon: '9/8' }, { razon: '13/12' }, { razon: '25/24' }, { razon: '1/1' }] },
+    { id: 'lower-limit-g2', nombre: 'lower limit G2', fundamental: 220.26, fijo: true, cuerdas: [{ razon: '34/25' }, { razon: '29/22' }, { razon: '31/24' }, { razon: '23/18' }, { razon: '37/30' }, { razon: '19/16' }] },
+    { id: 'sin-titulo-30', nombre: 'sin título #30', fijo: true, cuerdas: [{ hz: 329.63 }, { hz: 228.148 }, { hz: 196 }, { hz: 144.212 }, { hz: 110 }, { hz: 80.74 }] },
+    { id: 'singularidad-1', nombre: 'singularidad #1', fijo: true, cuerdas: [{ hz: 323.31 }, { hz: 242.8 }, { hz: 196 }, { hz: 143.37 }, { hz: 112.09 }, { hz: 82.4 }] },
+    { id: 'solo-for-guitar-1', nombre: 'Solo for guitar 1', fijo: true, cuerdas: [{ hz: 326.67 }, { hz: 245 }, { hz: 196 }, { hz: 144.22 }, { hz: 112 }, { hz: 82.41 }] },
+    { id: 'one-for-one', nombre: 'One for One', fijo: true, cuerdas: [{ hz: 326.98 }, { hz: 246.94 }, { hz: 198.39 }, { hz: 146.83 }, { hz: 111.6 }, { hz: 82.41 }] },
+  ],
 };
 </script>
-<script>
-(function () {
-  'use strict';
-  var BLOB = 'nGEsoWPI+18CQvhWs5IGJrR8D1YUW2S9IX+7sLeXcB8ZVEFnqpxlqajQqqwxoyK9sxhW1g0QtJMOvz+GVtq+1tyOM+0ugxGBLt7MIAPMQoY4ayvYl8hFNln3wE8xIe8pDdxBh1ywIQqCAoaZr92n2UMIinYxUug2D7izruxKg1qgW4q1022RDNcaIM3q+wGgM91ySgyyttrrWVUdqdbKzQI77SC0cu1PwsEAq9Heg9rQmaqhnZDOW97FEWRBEKfoVU/XDDMiKr5bvdrp8n/tMU7KWz1jPKvXgqAJtpSDJjI9LV4roOjI/OGXgYH+hOf8QUwmIKJOUhpiSGSRHUuSTsRiNlfhf+yGozCFIqhaMziCM7oENPlfIiTaoKbEdzrIRe+yj+yaazsIjSLwcFfpaOIcLF71CQNdQa9yKAfQhoxQkkqrvWxU6L+c6c+Gk4EB1dwGnvMXWgz846Pr61RvbfDmDRSn42fcgDdmJqRYUPx1XrylWYgB97Nmu4TXs9KwluoTyCFggPmdtGnEWzuRIsEvuRFQ8Ko1YzJlF88/kWkKN05b2HqlCHEuseV6n011/X4Il9STEGdqMM8r+oWmCQuYoZPxnWUEqhyEeebE3rjsRrbGZeBbpROZ/TvEPj9IRRR2RGXMky+TpPrte3WLnuQODdYQcaD9JnUWAMEKYte6FNV4jVuUuM5WN4uMcm6hN+zcCnhZYZcfilqYh8yGr9WVrDAPDjblfZTvKrv7lE+gb4gKLFpuAAh4z9LTLvi3RpolP9wtfsHcx9D/4BgzjRUaJSNGzJ8zLMdWKyGVCx9RvpdSzstb1Twc+km7ivNiPuHb9KsqvuiifeAynjWp12PVc3X6TERDEYVBtOGHDgX2i0z8Xadqai0180N30D3vQ8CDlUbhVYNe/ssviDeA9eGOptwq0ko428wqGIqh66TdlpQh7XuZXBiXEBB5fUFyvmItDO8FHw/0MimpkR5TbDFlmbRjwMe7wKriCJR926rUHBd4EFsclBytloCReYEnjy7QFT33UJV0VfJM037ddQ+8OA/G/c50UPr50aNTthLnbXuAhd7nqxMUN3vJHsPUhGcTZeK6utmw6CPWsCq6Q4OKdEd8Dvp1GzwpIn5SGLCCgFI5WJK92mFrTW/VPL1r96W2u6aoD/e4ZUB4ikLounD6T4g7cF4MZOEBORe1pSdmaFevQD4Ar3sqYLNP1XjjF6LCPMRSe8C59KczakTlvFk0KTn9Ckg2V9HFjQ0oLGiq2fhSjdJXsYmIboEVOku12E5PAkBEy5b3OlSb7kcD33/8hmWyPEt2BMUmL8p56rp0gUOitFqcawbmgChVcn545WqtL6vNuafM0zkDACPUqBFLT1gygVaM1vx0N5V8XmIWYKA1zxo5DTbQprLiQi9mC1swYz9OmwRDB4L4Hu8Zt9lm9DLX1XNceSPq5/5CMEO5lIvlO9dZsorMMoBFsSAOQlTPjhdwoMChZutj5/Y2xjPUxZnqXIO/U+Z5/CLH5ccXV6tLVKpedEX/sB9WoC2zoojG3/IIilvN90I2JQ0cCrTcHZc26jGgRR316KSjv3ij5xQYrMveQ+doG/BI40nfvsrSPyOX26R8E1s8riz3MFWl8KhT0KPYi/c7tj6MsRlUz1YSXfUE+U9rOX0nwOfKMTGD/kQXgpgxQVUghGEWiab+5PuvCEOwEpQdUC5Dab7BdiKsexCno8VsAOKv56qL9h3j6Zn2qabYerwN+UPkUppEww7M+tAtEWu1VN2915y5wwHuxxvRrEgT+MauVmuRXrDdo6T3JB1U+xrQJnHqmNkNzM8++tU6am3N42Ljmn/QpGZsQcUEdbH85hLfE7vKQYohm305OddEDZBJFKDzXSP/L7fKVIO2inXZ/W6xubLJey4FjQr+hqHuOLcTQrzo';
-  var LS_CLAVE = 'afinador.cristian.clave';
-  var overlay = document.getElementById('candado');
-  var estado = document.getElementById('claveStatus');
-  var principal = document.querySelector('main');
-  principal.style.visibility = 'hidden';
-
-  function bytes(b64) {
-    var s = atob(b64), a = new Uint8Array(s.length);
-    for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
-    return a;
-  }
-  function abrir(clave) {
-    var b = bytes(BLOB);
-    var salt = b.subarray(0, 16), iv = b.subarray(16, 28), ct = b.subarray(28);
-    return crypto.subtle.importKey('raw', new TextEncoder().encode(clave), 'PBKDF2', false, ['deriveBits']).then(function (k) {
-      return crypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt, iterations: 600000, hash: 'SHA-256' }, k, 512);
-    }).then(function (bits) {
-      return crypto.subtle.importKey('raw', new Uint8Array(bits).subarray(0, 32), { name: 'AES-GCM' }, false, ['decrypt']);
-    }).then(function (aes) {
-      return crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, aes, ct);
-    }).then(function (pt) {
-      return JSON.parse(new TextDecoder().decode(pt));
-    });
-  }
-  function desbloquear(lista) {
-    window.AFINADOR.afinaciones = lista;
-    overlay.remove();
-    principal.style.visibility = '';
-    var s = document.createElement('script');
-    s.src = '../app.js';
-    document.body.appendChild(s);
-  }
-  function intentar(clave, recordar) {
-    estado.textContent = 'Abriendo…';
-    abrir(clave).then(function (lista) {
-      if (!lista || !Array.isArray(lista) || !lista.length) { estado.textContent = 'Clave incorrecta.'; return; }
-      try { if (recordar) localStorage.setItem(LS_CLAVE, clave); } catch (e) {}
-      desbloquear(lista);
-    }).catch(function () { estado.textContent = 'Clave incorrecta.'; });
-  }
-  document.getElementById('formClave').addEventListener('submit', function (e) {
-    e.preventDefault();
-    intentar(document.getElementById('clave').value, document.getElementById('recordar').checked);
-  });
-  var guardada = null;
-  try { guardada = localStorage.getItem(LS_CLAVE); } catch (e) {}
-  if (guardada) intentar(guardada, false);
-})();
-</script>
+<script src="../app.js"></script>
 <script>
   if ('serviceWorker' in navigator)
     window.addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
