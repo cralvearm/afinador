@@ -1,0 +1,25 @@
+{
+  "name": "Afinador",
+  "short_name": "Afinador",
+  "description": "Afinador cromático por micrófono para afinaciones no tradicionales.",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "index.html?instalada",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f2f3f0",
+  "theme_color": "#f2f3f0",
+  "icons": [
+    {
+      "src": "../favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "../apple-touch-icon.png",
+      "sizes": "180",
+      "type": "image/png"
+    }
+  ]
+}
