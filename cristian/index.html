@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="es">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Afinador</title>
@@ -10,6 +13,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Afinador">
 <link rel="stylesheet" href="../app.css">
+</head>
+<body>
 
 <main>
   <header>
@@ -113,8 +118,11 @@ window.AFINADOR = {
   ],
 };
 </script>
+<script src="../detect.js"></script>
 <script src="../app.js"></script>
 <script>
   if ('serviceWorker' in navigator)
     window.addEventListener('load', () => navigator.serviceWorker.register('../sw.js').catch(() => {}));
 </script>
+</body>
+</html>

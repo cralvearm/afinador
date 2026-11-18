@@ -9,10 +9,10 @@ Afinador cromático web por micrófono para afinaciones no tradicionales: cada c
 ## Arquitectura
 
 - `app.js` + `app.css` compartidos en la raíz. Un `index.html` por instrumento (raíz y `bajo/`) que define `window.AFINADOR`: clave de localStorage, cuerdas por defecto, pasaAltos y afinaciones precargadas.
-- Detección de tono: método de McLeod (autocorrelación normalizada). Elección manual de cuerda como único modo.
+- Detección de tono: método de McLeod (autocorrelación normalizada), en `detect.js`, compartido por todas las páginas y por las pruebas (`test-detector.js`, `test-app.js`, se corren con `jsc`). Elección manual de cuerda como único modo.
 - Los datos del usuario viven solo en su navegador: `localStorage` con clave por instrumento (definida en `window.AFINADOR`). Export/import en texto y archivo .json (sección "Copia de respaldo"), más `navigator.storage.persist()`.
 - Enlace compartible por afinación: `?a=<base64url>`, con Web Share o portapapeles.
-- PWA instalable: `manifest.webmanifest` + `sw.js` (cache name `afinador-v5`) con precarga y modo offline.
+- PWA instalable: `manifest.webmanifest` + `sw.js` (cache name `afinador-v7`) con precarga y modo offline. Subir la versión con cada cambio de assets.
 
 ## Reglas del repo
 
@@ -37,5 +37,6 @@ La app la construyó originalmente Claude; estos cambios posteriores se hicieron
 - `/` — afinador principal (guitarra)
 - `bajo/` — afinador de bajo
 - `cristian/` — afinador personal del dueño (8 afinaciones precargadas, sin clave)
-- `app.js`, `app.css` — código compartido
-- `sw.js`, `manifest.webmanifest`, `favicon.svg`, `apple-touch-icon.png` — PWA
+- `app.js`, `app.css` — código compartido; `detect.js` — detector de tono
+- `sw.js`, `manifest.webmanifest`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png` — PWA
+- `test-detector.js`, `test-app.js` — pruebas, se corren con `jsc`

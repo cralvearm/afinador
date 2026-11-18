@@ -57,6 +57,15 @@ Una cuerda lleva `razon` —y entonces la afinación lleva `fundamental`— o ll
 
 Detección de periodo por diferencia cuadrática normalizada —método de McLeod— sobre una ventana de 32768 muestras, unas diez lecturas por segundo, con interpolación parabólica del pico. Antes de medir, la señal pasa por un filtro de 60 a 1000 Hz. Se muestra una lectura sólo cuando la mayoría de las últimas coincide con su mediana; la aguja se frena al acercarse al centro y el verde entra a ±3 cents y sale a ±6.
 
+## Pruebas
+
+`test-detector.js` mide el detector con señales sintéticas de altura conocida y `test-app.js` carga `app.js` con un DOM simulado y reproduce los gestos de la página, incluida la transposición de la fundamental. Se corren con `jsc`, el JavaScriptCore de macOS, desde la carpeta del proyecto:
+
+```sh
+/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc test-detector.js
+/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc test-app.js
+```
+
 ## Licencia
 
 MIT. Ver `LICENSE`.

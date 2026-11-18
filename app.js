@@ -6,10 +6,20 @@
   const PRELOADED = CFG.afinaciones || [];
   const KEY = CFG.clave || 'afinador.afinaciones';
   const loadSaved = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } };
-  const store = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch {} if (list.length) pedirPersistencia(); };
+  // Al guardar se revierte la transposición de la fundamental que no se haya autorizado con su botón.
+  const store = (list) => {
+    for (const t of list) if (fundBase.has(t.id)) t.fundamental = fundBase.get(t.id);
+    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch {} if (list.length) pedirPersistencia();
+  };
   function pedirPersistencia() { try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {} }
   let saved = loadSaved();
   const all = () => PRELOADED.concat(saved);
+  // Id de afinación nueva, que no choque con otra ya guardada o precargada.
+  function nuevoId() {
+    let id, suf = 0;
+    do { id = 'u-' + Date.now().toString(36) + (suf ? '-' + suf : ''); suf++; } while (all().some(t => t.id === id));
+    return id;
+  }
 
   // ---------- Alturas ----------
   const NOMBRES = ['do', 'do♯', 're', 'mi♭', 'mi', 'fa', 'fa♯', 'sol', 'sol♯', 'la', 'si♭', 'si'];
@@ -41,9 +51,7 @@
 
   // ---------- Estado ----------
   let current = all()[0] || null;
-  let activeIdx = current ? Math.min(2, current.cuerdas.length - 1) : 0;
-  let auto = false; // la cuerda la elige el intérprete; tocar una tarjeta la fija
-  let candidata = null; // cuerda que el detector propone, a la espera de confirmarse
+  let activeIdx = current ? Math.min(2, current.cuerdas.length - 1) : 0; // la cuerda la elige el intérprete; tocar una tarjeta la fija
   const fundBase = new Map(); // fundamental guardada de cada afinación, para saber si hay transposición sin guardar
 
   // ---------- Selector y cuerdas ----------
@@ -77,11 +85,11 @@
     });
     btn.addEventListener('click', () => {
       if (current.fijo) {
-        const t = { id: 'u-' + Date.now().toString(36), nombre: `${current.nombre} · ${fmtHz(current.fundamental)} Hz`, fundamental: current.fundamental, cuerdas: current.cuerdas.map(c => ({ razon: c.razon })) };
+        const t = { id: nuevoId(), nombre: `${current.nombre} · ${fmtHz(current.fundamental)} Hz`, fundamental: current.fundamental, cuerdas: current.cuerdas.map(c => ({ razon: c.razon })) };
         current.fundamental = base;
+        fundBase.set(t.id, t.fundamental);
         saved.push(t); store(saved); current = t;
-      } else { store(saved); }
-      fundBase.set(current.id, current.fundamental);
+      } else { fundBase.set(current.id, current.fundamental); store(saved); }
       renderSelect(); renderTuning(); renderLib();
     });
     meta.append(lab, inp, unit, btn);
@@ -106,7 +114,7 @@
     updateTarget();
   }
   sel.addEventListener('change', () => {
-    if (current && current.fijo && fundBase.has(current.id)) current.fundamental = fundBase.get(current.id);
+    if (current && fundBase.has(current.id)) current.fundamental = fundBase.get(current.id);
     current = all().find(t => t.id === sel.value) || all()[0] || null;
     activeIdx = Math.min(activeIdx, current.cuerdas.length - 1);
     renderTuning(); if (toneOn) startTone();
@@ -153,14 +161,6 @@
     }
     ultimaLectura = performance.now();
     centsOut.style.visibility = 'visible'; freqLine.style.visibility = 'visible';
-    if (auto) {
-      let best = 0, bestD = Infinity;
-      current.cuerdas.forEach((c, i) => { const d = Math.abs(1200 * Math.log2(hz / hzOf(current, i))); if (d < bestD) { bestD = d; best = i; } });
-      if (best !== activeIdx && bestD < 300) {
-        candidata = (candidata && candidata.i === best) ? { i: best, n: candidata.n + 1 } : { i: best, n: 1 };
-        if (candidata.n >= 4) { activeIdx = best; candidata = null; renderStrings(); }
-      } else candidata = null;
-    }
     const target = hzOf(current, activeIdx);
     const crudo = 1200 * Math.log2(hz / target);
     // Una lectura a más de 300 cents de la cuerda elegida es otra cuerda o un armónico: se descarta.
@@ -188,8 +188,7 @@
   // ---------- Micrófono y detección ----------
   let ctx = null, analyser = null, micStream = null, raf = 0, micOn = false;
   const history = [];
-  // Claridad mínima del periodo detectado (0 a 1) y umbral de nivel de entrada, ajustable en la página.
-  const CLARIDAD = 0.85;
+  // Umbral de nivel de entrada, ajustable en la página.
   const sensInput = document.getElementById('sens');
   const umbral = () => Math.pow(10, (sensInput ? +sensInput.value : -40) / 20);
   if (sensInput) sensInput.addEventListener('input', () => { document.getElementById('sensOut').textContent = '−' + Math.abs(+sensInput.value) + ' dB'; });
@@ -236,7 +235,7 @@
         analyser.getFloatTimeDomainData(buf);
         // Se reduce a la mitad de la frecuencia de muestreo, promediando pares, para abaratar la autocorrelación.
         for (let i = 0; i < mitad.length; i++) mitad[i] = 0.5 * (buf[2 * i] + buf[2 * i + 1]);
-        const hz = detect(mitad, c.sampleRate / 2);
+        const hz = detect(mitad, c.sampleRate / 2, umbral());
         if (hz > 0) { history.push(hz); if (history.length > 5) history.shift(); }
         else if (history.length) history.shift();
       }
@@ -249,7 +248,9 @@
     cancelAnimationFrame(raf); micOn = false;
     if (micStream) micStream.getTracks().forEach(t => t.stop());
     micStream = null; analyser = null; history.length = 0;
-    micBtn.textContent = 'Micrófono off'; status.textContent = STATUS_DEFAULT; showReading(0);
+    micBtn.textContent = 'Micrófono off'; status.textContent = STATUS_DEFAULT;
+    // Con el micrófono apagado no queda raf que apague la retención: la lectura se limpia de inmediato.
+    ultimaLectura = 0; showReading(0);
   }
   // El micrófono se enciende solo. Si el navegador exige un gesto del usuario, se enciende con el primer toque en la página.
   // El botón lo apaga y lo enciende; apagado a mano, no se vuelve a encender solo.
@@ -284,37 +285,6 @@
   window.addEventListener('load', autoMic);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !micOn) { micDenied = false; autoMic(); } });
   const median = (a) => { const s = a.slice().sort((x, y) => x - y); return s[s.length >> 1]; };
-
-  // Método de McLeod simplificado: diferencia cuadrática normalizada, primer pico claro, interpolación parabólica.
-  function detect(buf, sr) {
-    const n = buf.length;
-    let rms = 0; for (let i = 0; i < n; i++) rms += buf[i] * buf[i];
-    rms = Math.sqrt(rms / n); if (rms < umbral()) return -1;
-    const minLag = Math.floor(sr / 1200), maxLag = Math.floor(sr / 30);
-    const nsdf = new Float32Array(maxLag + 1);
-    for (let tau = minLag; tau <= maxLag; tau++) {
-      let acf = 0, m = 0;
-      for (let i = 0, j = tau; j < n; i++, j++) { acf += buf[i] * buf[j]; m += buf[i] * buf[i] + buf[j] * buf[j]; }
-      nsdf[tau] = m ? 2 * acf / m : 0;
-    }
-    // Máximos locales entre cruces por cero positivos.
-    const peaks = []; let tau = minLag;
-    while (tau <= maxLag && nsdf[tau] > 0) tau++;
-    while (tau <= maxLag) {
-      while (tau <= maxLag && nsdf[tau] <= 0) tau++;
-      let best = -1, bestV = 0;
-      while (tau <= maxLag && nsdf[tau] > 0) { if (nsdf[tau] > bestV) { bestV = nsdf[tau]; best = tau; } tau++; }
-      if (best > 0) peaks.push([best, bestV]);
-    }
-    if (!peaks.length) return -1;
-    const gmax = Math.max(...peaks.map(p => p[1]));
-    if (gmax < CLARIDAD) return -1;
-    const chosen = peaks.find(p => p[1] >= 0.93 * gmax)[0];
-    const a = nsdf[chosen - 1] || 0, b = nsdf[chosen], c2 = nsdf[chosen + 1] || 0;
-    const denom = a - 2 * b + c2;
-    const shift = denom ? 0.5 * (a - c2) / denom : 0;
-    return sr / (chosen + shift);
-  }
 
   // ---------- Tono de referencia ----------
   let toneOn = false, osc = [], toneGain = null;
@@ -407,7 +377,7 @@
       if (!(hz > 0)) { alert(`La cuerda ${+tr.dataset.i + 1} no tiene una altura válida.`); return; }
       cuerdas.push(mode === 'ratio' ? { razon: tr.querySelector('[data-k="ratio"]').value.trim() } : { hz: Math.round(hz * 1000) / 1000 });
     }
-    const t = { id: 'u-' + Date.now().toString(36), nombre, cuerdas };
+    const t = { id: nuevoId(), nombre, cuerdas };
     if (mode === 'ratio') t.fundamental = parseNum(fFund.value);
     saved.push(t); store(saved);
     current = t; activeIdx = 0;
@@ -480,7 +450,7 @@
     let added = 0;
     for (const t of list) {
       if (!t || !t.nombre || !Array.isArray(t.cuerdas) || !t.cuerdas.length) continue;
-      const clean = { id: 'u-' + Date.now().toString(36) + added, nombre: String(t.nombre), cuerdas: t.cuerdas.map(c => c && c.razon ? { razon: String(c.razon) } : { hz: +(c && c.hz) }) };
+      const clean = { id: nuevoId(), nombre: String(t.nombre), cuerdas: t.cuerdas.map(c => c && c.razon ? { razon: String(c.razon) } : { hz: +(c && c.hz) }) };
       if (t.fundamental > 0) clean.fundamental = +t.fundamental;
       if (!clean.cuerdas.every((c, i) => hzOf(clean, i) > 0)) continue;
       saved.push(clean); added++;
@@ -523,7 +493,7 @@
     try { o = JSON.parse(b64url.dec(p)); } catch (e) { return; }
     if (!o || !o.n || !Array.isArray(o.c) || !o.c.length) return;
     const cuerdas = o.c.map(x => x && x.r ? { razon: String(x.r) } : { hz: +(x && x.h) });
-    const t = { id: 'u-' + Date.now().toString(36), nombre: String(o.n), cuerdas };
+    const t = { id: nuevoId(), nombre: String(o.n), cuerdas };
     if (o.f > 0) t.fundamental = +o.f;
     if (!cuerdas.every((c, i) => hzOf(t, i) > 0)) return;
     saved.push(t); store(saved);

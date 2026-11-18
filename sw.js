@@ -1,7 +1,7 @@
 /* Service worker del Afinador: precarga los archivos de la app y sirve
    la copia guardada cuando no hay conexión. Para actualizar la copia,
    cambiar VERSION y volver a desplegar. */
-const VERSION = 'afinador-v6';
+const VERSION = 'afinador-v7';
 
 const PRECACHE = [
   './',
@@ -10,6 +10,7 @@ const PRECACHE = [
   './bajo/index.html',
   './app.css',
   './app.js',
+  './detect.js',
   './favicon.svg',
   './apple-touch-icon.png',
   './manifest.webmanifest',
